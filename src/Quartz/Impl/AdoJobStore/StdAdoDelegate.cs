@@ -197,7 +197,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "newState", newState);
                 AddCommandParameter(cmd, "oldState1", oldState1);
                 AddCommandParameter(cmd, "oldState2", oldState2);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -216,10 +216,10 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectMisfiredTriggers)))
             {
                 AddCommandParameter(cmd, "timestamp", GetDbDateTimeValue(ts));
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<TriggerKey> list = new List<TriggerKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string triggerName = rs.GetString(ColumnTriggerName);
                         string groupName = rs.GetString(ColumnTriggerGroup);
@@ -245,10 +245,10 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectTriggersInState)))
             {
                 AddCommandParameter(cmd, "state", state);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<TriggerKey> list = new List<TriggerKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add(new TriggerKey(rs.GetString(0), rs.GetString(1)));
                     }
@@ -278,10 +278,10 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "timestamp", GetDbDateTimeValue(ts));
                 AddCommandParameter(cmd, "state", state);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<TriggerKey> list = new List<TriggerKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string triggerName = rs.GetString(ColumnTriggerName);
                         string groupName = rs.GetString(ColumnTriggerGroup);
@@ -322,10 +322,10 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "state1", state1);
 
                 DbDataReader rs;
-                using (rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     bool hasReachedLimit = false;
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false) && !hasReachedLimit)
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false) && !hasReachedLimit)
                     {
                         if (resultList.Count == count)
                         {
@@ -368,9 +368,9 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "nextFireTime", GetDbDateTimeValue(ts));
                 AddCommandParameter(cmd, "state1", state1);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return Convert.ToInt32(rs.GetValue(0), CultureInfo.InvariantCulture);
                     }
@@ -403,10 +403,10 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", groupName);
                 AddCommandParameter(cmd, "state", state);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<TriggerKey> list = new List<TriggerKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string triggerName = rs.GetString(ColumnTriggerName);
                         list.Add(new TriggerKey(triggerName, groupName));
@@ -445,11 +445,11 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "instanceName", instanceId);
                 AddCommandParameter(cmd, "requestsRecovery", GetDbBooleanValue(true));
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     long dumId = SystemTime.UtcNow().Ticks;
 
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string jobName = rs.GetString(ColumnJobName);
                         string jobGroup = rs.GetString(ColumnJobGroup);
@@ -509,7 +509,7 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteFiredTriggers)))
             {
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -528,7 +528,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteInstancesFiredTriggers)))
             {
                 AddCommandParameter(cmd, "instanceName", instanceName);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -543,23 +543,23 @@ namespace Quartz.Impl.AdoJobStore
             CancellationToken cancellationToken = default)
         {
             DbCommand ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllSimpleTriggers));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllSimpropTriggers));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllCronTriggers));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllBlobTriggers));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllTriggers));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllJobDetails));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllCalendars));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteAllPausedTriggerGrps));
-            await ps.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
             ps = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteFiredTriggers));
-            ps.ExecuteNonQuery();
+            await ExecuteNonQueryAsync(ps, cancellationToken).ConfigureAwait(false);
         }
 
         //---------------------------------------------------------------------------
@@ -604,7 +604,7 @@ namespace Quartz.Impl.AdoJobStore
                     AddCommandParameter(cmd, paramName, null, DbProvider.Metadata.DbBinaryType);
                 }
 
-                insertResult = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                insertResult = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
 
             return insertResult;
@@ -729,7 +729,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", job.Key.Name);
                 AddCommandParameter(cmd, "jobGroup", job.Key.Group);
 
-                int insertResult = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int insertResult = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
                 return insertResult;
             }
@@ -751,10 +751,10 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<TriggerKey> list = new List<TriggerKey>(10);
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string trigName = rs.GetString(ColumnTriggerName);
                         string trigGroup = rs.GetString(ColumnTriggerGroup);
@@ -785,7 +785,7 @@ namespace Quartz.Impl.AdoJobStore
                 }
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -808,7 +808,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
 
-                object o = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                object o = await ExecuteScalarAsync(cmd, cancellationToken).ConfigureAwait(false);
                 if (o != null)
                 {
                     return (bool) o;
@@ -834,9 +834,9 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
-                using (var dr = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var dr = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(dr, cancellationToken).ConfigureAwait(false))
                     {
                         return true;
                     }
@@ -866,7 +866,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", job.Key.Name);
                 AddCommandParameter(cmd, "jobGroup", job.Key.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -888,11 +888,11 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     JobDetailImpl job = null;
 
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         job = new JobDetailImpl();
 
@@ -987,7 +987,7 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectNumJobs)))
             {
-                return (int) await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                return (int) await ExecuteScalarAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1003,10 +1003,10 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectJobGroups)))
             {
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<string> list = new List<string>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add(rs.GetString(0));
                     }
@@ -1045,10 +1045,10 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "jobGroup", parameter);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     var list = new ReadOnlyCompatibleHashSet<JobKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add(new JobKey(rs.GetString(0), rs.GetString(1)));
                     }
@@ -1158,7 +1158,7 @@ namespace Quartz.Impl.AdoJobStore
                 }
                 AddCommandParameter(cmd, "triggerPriority", trigger.Priority);
 
-                int insertResult = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int insertResult = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
                 if (tDel == null)
                 {
@@ -1193,7 +1193,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", trigger.Key.Group);
                 AddCommandParameter(cmd, "blob", buf, DbProvider.Metadata.DbBinaryType);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1275,7 +1275,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", trigger.Key.Group);
             }
 
-            int insertResult = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            int insertResult = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
             if (tDel == null)
             {
@@ -1310,7 +1310,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", trigger.Key.Name);
                 AddCommandParameter(cmd, "triggerGroup", trigger.Key.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1331,9 +1331,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                using (var dr = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var dr = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(dr, cancellationToken).ConfigureAwait(false))
                     {
                         return true;
                     }
@@ -1362,7 +1362,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1396,7 +1396,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "oldState2", oldState2);
                 AddCommandParameter(cmd, "oldState3", oldState3);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1429,7 +1429,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "oldState2", oldState2);
                 AddCommandParameter(cmd, "oldState3", oldState3);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1457,7 +1457,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
                 AddCommandParameter(cmd, "oldState", oldState);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1488,7 +1488,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "oldState", oldState);
                 AddCommandParameter(cmd, "nextFireTime", GetDbDateTimeValue(nextFireTime));
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1515,7 +1515,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", ToSqlLikeClause(matcher));
                 AddCommandParameter(cmd, "oldState", oldState);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1539,7 +1539,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1566,7 +1566,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
                 AddCommandParameter(cmd, "oldState", oldState);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1587,7 +1587,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1610,7 +1610,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1647,9 +1647,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return Convert.ToInt32(rs.GetValue(0), CultureInfo.InvariantCulture);
                     }
@@ -1678,9 +1678,9 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         JobDetailImpl job = new JobDetailImpl();
                         job.Name = rs.GetString(ColumnJobName);
@@ -1726,9 +1726,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         keys.Add(new TriggerKey(rs.GetString(0), rs.GetString(1)));
                     }
@@ -1766,9 +1766,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectTriggersForCalendar)))
             {
                 AddCommandParameter(cmd, "calendarName", calName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         keys.Add(new TriggerKey(rs.GetString(ColumnTriggerName), rs.GetString(ColumnTriggerGroup)));
                     }
@@ -1815,9 +1815,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (!await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (!await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return null;
                     }
@@ -1848,7 +1848,7 @@ namespace Quartz.Impl.AdoJobStore
                     AddCommandParameter(cmd2, "triggerGroup", triggerKey.Group);
                     using (var rs2 = await cmd2.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
                     {
-                        if (await rs2.ReadAsync(cancellationToken).ConfigureAwait(false))
+                        if (await ReadSingleRecordFromDataReaderAsync(rs2, cancellationToken).ConfigureAwait(false))
                         {
                             trigger = await GetObjectFromBlob<IOperableTrigger>(rs2, 0, cancellationToken).ConfigureAwait(false);
                         }
@@ -1918,9 +1918,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    return await rs.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    return await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -1952,9 +1952,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         IDictionary map = await ReadMapFromReader(rs, 0).ConfigureAwait(false);
                         if (map != null)
@@ -1986,9 +1986,9 @@ namespace Quartz.Impl.AdoJobStore
 
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         state = rs.GetString(ColumnTriggerState);
                     }
@@ -2021,9 +2021,9 @@ namespace Quartz.Impl.AdoJobStore
 
                 AddCommandParameter(cmd, "triggerName", triggerKey.Name);
                 AddCommandParameter(cmd, "triggerGroup", triggerKey.Group);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         string state = rs.GetString(ColumnTriggerState);
                         object nextFireTime = rs[ColumnNextFireTime];
@@ -2055,9 +2055,9 @@ namespace Quartz.Impl.AdoJobStore
             {
                 int count = 0;
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         count = Convert.ToInt32(rs.GetInt32(0));
                     }
@@ -2081,10 +2081,10 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectTriggerGroups)))
             {
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<string> list = new List<string>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add((string) rs[0]);
                     }
@@ -2102,10 +2102,10 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectTriggerGroupsFiltered)))
             {
                 AddCommandParameter(cmd, "triggerGroup", ToSqlLikeClause(matcher));
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<string> list = new List<string>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add((string) rs[0]);
                     }
@@ -2145,10 +2145,10 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(sql)))
             {
                 AddCommandParameter(cmd, "triggerGroup", parameter);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     var keys = new ReadOnlyCompatibleHashSet<TriggerKey>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         keys.Add(new TriggerKey(rs.GetString(0), rs.GetString(1)));
                     }
@@ -2172,7 +2172,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlInsertPausedTriggerGroup)))
             {
                 AddCommandParameter(cmd, "triggerGroup", groupName);
-                int rows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int rows = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
                 return rows;
             }
@@ -2193,7 +2193,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeletePausedTriggerGroup)))
             {
                 AddCommandParameter(cmd, "triggerGroup", groupName);
-                int rows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int rows = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
                 return rows;
             }
@@ -2207,7 +2207,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeletePausedTriggerGroup)))
             {
                 AddCommandParameter(cmd, "triggerGroup", ToSqlLikeClause(matcher));
-                int rows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int rows = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
 
                 return rows;
             }
@@ -2225,7 +2225,7 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeletePausedTriggerGroups)))
             {
-                int rows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                int rows = await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
                 return rows;
             }
         }
@@ -2247,9 +2247,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectPausedTriggerGroup)))
             {
                 AddCommandParameter(cmd, "triggerGroup", groupName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    return await rs.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    return await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -2271,9 +2271,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectNumTriggersInGroup)))
             {
                 AddCommandParameter(cmd, "triggerGroup", groupName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (!await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (!await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return false;
                     }
@@ -2309,7 +2309,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "calendarName", calendarName);
                 AddCommandParameter(cmd, "calendar", baos, DbProvider.Metadata.DbBinaryType);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2335,7 +2335,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "calendar", baos, DbProvider.Metadata.DbBinaryType);
                 AddCommandParameter(cmd, "calendarName", calendarName);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2356,9 +2356,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectCalendarExistence)))
             {
                 AddCommandParameter(cmd, "calendarName", calendarName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return true;
                     }
@@ -2383,10 +2383,10 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectCalendar)))
             {
                 AddCommandParameter(cmd, "calendarName", calendarName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     ICalendar cal = null;
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         cal = await GetObjectFromBlob<ICalendar>(rs, 0, cancellationToken).ConfigureAwait(false);
                     }
@@ -2416,9 +2416,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectReferencedCalendar)))
             {
                 AddCommandParameter(cmd, "calendarName", calendarName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return true;
                     }
@@ -2443,7 +2443,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteCalendar)))
             {
                 AddCommandParameter(cmd, "calendarName", calendarName);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2460,9 +2460,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectNumCalendars)))
             {
                 int count = 0;
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         count = Convert.ToInt32(rs.GetValue(0), CultureInfo.InvariantCulture);
                     }
@@ -2485,10 +2485,10 @@ namespace Quartz.Impl.AdoJobStore
         {
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectCalendars)))
             {
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
                     List<string> list = new List<string>();
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         list.Add((string) rs[0]);
                     }
@@ -2522,9 +2522,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "state", StateWaiting);
                 AddCommandParameter(cmd, "fireTime", GetDbDateTimeValue(fireTime));
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return new TriggerKey(rs.GetString(ColumnTriggerName), rs.GetString(ColumnTriggerGroup));
                     }
@@ -2564,9 +2564,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "noLaterThan", GetDbDateTimeValue(noLaterThan));
                 AddCommandParameter(cmd, "noEarlierThan", GetDbDateTimeValue(noEarlierThan));
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false) && nextTriggers.Count < maxCount)
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false) && nextTriggers.Count < maxCount)
                     {
                         nextTriggers.Add(new TriggerKey((string) rs[ColumnTriggerName], (string) rs[ColumnTriggerGroup]));
                     }
@@ -2623,7 +2623,7 @@ namespace Quartz.Impl.AdoJobStore
 
                 AddCommandParameter(cmd, "triggerPriority", trigger.Priority);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2704,9 +2704,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "triggerGroup", groupName);
             }
 
-            using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+            using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
             {
-                while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                 {
                     FiredTriggerRecord rec = new FiredTriggerRecord();
 
@@ -2759,9 +2759,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobGroup", groupName);
             }
 
-            using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+            using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
             {
-                while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                 {
                     FiredTriggerRecord rec = new FiredTriggerRecord();
 
@@ -2802,9 +2802,9 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectInstancesFiredTriggers)))
             {
                 AddCommandParameter(cmd, "instanceName", instanceName);
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         FiredTriggerRecord rec = new FiredTriggerRecord();
 
@@ -2845,9 +2845,9 @@ namespace Quartz.Impl.AdoJobStore
             var instanceNames = new ReadOnlyCompatibleHashSet<string>();
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectFiredTriggerInstanceNames)))
             {
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         instanceNames.Add(rs.GetString(ColumnInstanceName));
                     }
@@ -2872,7 +2872,7 @@ namespace Quartz.Impl.AdoJobStore
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlDeleteFiredTrigger)))
             {
                 AddCommandParameter(cmd, "triggerEntryId", entryId);
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2893,9 +2893,9 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "jobName", jobKey.Name);
                 AddCommandParameter(cmd, "jobGroup", jobKey.Group);
 
-                using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    if (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    if (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                     {
                         return Convert.ToInt32(rs.GetValue(0), CultureInfo.InvariantCulture);
                     }
@@ -2927,7 +2927,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "lastCheckinTime", GetDbDateTimeValue(checkInTime));
                 AddCommandParameter(cmd, "checkinInterval", GetDbTimeSpanValue(interval));
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2947,7 +2947,7 @@ namespace Quartz.Impl.AdoJobStore
             {
                 AddCommandParameter(cmd, "instanceName", instanceName);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -2970,7 +2970,7 @@ namespace Quartz.Impl.AdoJobStore
                 AddCommandParameter(cmd, "lastCheckinTime", GetDbDateTimeValue(checkInTime));
                 AddCommandParameter(cmd, "instanceName", instanceName);
 
-                return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                return await ExecuteNonQueryAsync(cmd, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -3002,9 +3002,9 @@ namespace Quartz.Impl.AdoJobStore
             {
                 cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectSchedulerStates));
             }
-            using (var rs = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+            using (var rs = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
             {
-                while (await rs.ReadAsync(cancellationToken).ConfigureAwait(false))
+                while (await ReadSingleRecordFromDataReaderAsync(rs, cancellationToken).ConfigureAwait(false))
                 {
                     SchedulerStateRecord rec = new SchedulerStateRecord();
                     rec.SchedulerInstanceId = rs.GetString(ColumnInstanceName);
@@ -3239,9 +3239,9 @@ namespace Quartz.Impl.AdoJobStore
             var retValue = new ReadOnlyCompatibleHashSet<string>();
             using (var cmd = PrepareCommand(conn, ReplaceTablePrefix(SqlSelectPausedTriggerGroups)))
             {
-                using (var dr = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                using (var dr = await ExecuteReaderAsync(cmd, cancellationToken).ConfigureAwait(false))
                 {
-                    while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    while (await ReadSingleRecordFromDataReaderAsync(dr, cancellationToken).ConfigureAwait(false))
                     {
                         string groupName = (string) dr[ColumnTriggerGroup];
                         retValue.Add(groupName);
@@ -3265,5 +3265,50 @@ namespace Quartz.Impl.AdoJobStore
         {
             adoUtil.AddCommandParameter(cmd, paramName, paramValue, dataType, size);
         }
+        #region Functions that read/write data.
+        /// <summary>
+        /// Read a single record from the passed in <see cref="DbDataReader"/>.
+        /// </summary>
+        /// <param name="rs">The <see cref="DbDataReader"/> from which to read.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        protected virtual async Task<bool> ReadSingleRecordFromDataReaderAsync(DbDataReader rs, CancellationToken cancellationToken = default)
+        {
+            return await rs.ReadAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Executesthe daprovided <see cref="DbCommand"/> and returns a <see cref="DbDataReader"/>.
+        /// </summary>
+        /// <param name="cmd">The database command to execute.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        protected virtual async Task<DbDataReader> ExecuteReaderAsync(DbCommand cmd, CancellationToken cancellationToken = default)
+        {
+            return await cmd.ExecuteReaderAsync(cancellationToken);
+
+        }
+        /// <summary>
+        /// Executes the query and returns the first column of the first row in the result set returned by the query. All other columns and rows are ignored.
+        /// </summary>
+        /// <param name="cmd">The database command to execute.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        protected virtual async Task<object> ExecuteScalarAsync(DbCommand cmd, CancellationToken cancellationToken = default)
+        {
+            return await cmd.ExecuteScalarAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, executes a SQL statement against a connection object asynchronously.
+        /// </summary>
+        /// <param name="cmd">The database command to execute.</param>
+        /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        protected virtual async Task<int> ExecuteNonQueryAsync(DbCommand cmd, CancellationToken cancellationToken)
+        {
+            return await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        #endregion
     }
 }
