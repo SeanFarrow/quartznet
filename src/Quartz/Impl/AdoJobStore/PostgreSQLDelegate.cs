@@ -69,7 +69,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected override async Task<bool> ReadSingleRecordFromDataReaderAsync(DbDataReader rs, CancellationToken cancellationToken = default)
         {
-            return await RetryFunction(() => base.ReadSingleRecordFromDataReaderAsync(rs, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions);
+            return await RetryFunction(() => base.ReadSingleRecordFromDataReaderAsync(rs, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected override async Task<DbDataReader> ExecuteReaderAsync(DbCommand cmd, CancellationToken cancellationToken = default)
         {
-            return await RetryFunction(() => base.ExecuteReaderAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions);
+            return await RetryFunction(() => base.ExecuteReaderAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected override async Task<object> ExecuteScalarAsync(DbCommand cmd, CancellationToken cancellationToken = default)
         {
-            return await RetryFunction(() => base.ExecuteScalarAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions);
+            return await RetryFunction(() => base.ExecuteScalarAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected override async Task<int> ExecuteNonQueryAsync(DbCommand cmd, CancellationToken cancellationToken)
         {
-            return await RetryFunction(() => base.ExecuteNonQueryAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions);
+            return await RetryFunction(() => base.ExecuteNonQueryAsync(cmd, cancellationToken), DefaultPermittedRetryCount, DefaultTimeBetweenExecutions).ConfigureAwait(false);
         }
         #endregion
 

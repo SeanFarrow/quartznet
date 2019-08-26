@@ -3274,7 +3274,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected virtual async Task<bool> ReadSingleRecordFromDataReaderAsync(DbDataReader rs, CancellationToken cancellationToken = default)
         {
-            return await rs.ReadAsync(cancellationToken);
+            return await rs.ReadAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -3285,8 +3285,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected virtual async Task<DbDataReader> ExecuteReaderAsync(DbCommand cmd, CancellationToken cancellationToken = default)
         {
-            return await cmd.ExecuteReaderAsync(cancellationToken);
-
+            return await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         }
         /// <summary>
         /// Executes the query and returns the first column of the first row in the result set returned by the query. All other columns and rows are ignored.
@@ -3296,7 +3295,7 @@ namespace Quartz.Impl.AdoJobStore
         /// <returns>A task representing the asynchronous operation.</returns>
         protected virtual async Task<object> ExecuteScalarAsync(DbCommand cmd, CancellationToken cancellationToken = default)
         {
-            return await cmd.ExecuteScalarAsync(cancellationToken);
+            return await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
